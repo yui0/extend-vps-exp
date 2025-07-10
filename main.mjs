@@ -6,7 +6,7 @@ const browser = await puppeteer.launch({
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
 })
 const [page] = await browser.pages()
-const recorder = await page.screencast({ path: 'recording.webm' })
+const recorder = await page.screencast({ path: 'recording.mp4' })
 
 try {
     await page.goto('https://secure.xserver.ne.jp/xapanel/login/xserver/')
