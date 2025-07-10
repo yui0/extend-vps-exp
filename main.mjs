@@ -19,6 +19,7 @@ try {
     await page.click('text=契約情報')
     await page.click('text=更新する')
     await page.click('text=引き続き無料VPSの利用を継続する')
+    await page.waitForNavigation()
     await page.click('text=無料VPSの利用を継続する')
 } catch (e) {
     console.error(e)
