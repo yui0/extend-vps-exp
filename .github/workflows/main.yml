@@ -1,0 +1,20 @@
+on:
+  schedule:
+    - cron: 0 15 * * *
+  push:
+
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+      - run: sudo apt-get -qq update && sudo apt-get -yqq install --no-install-recommends ffmpeg fonts-noto-cjk
+      - run: yarn add puppeteer
+      - run: node main.mjs
+        env:
+          EMAIL: ${{ secrets.EMAIL }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: recording.webm
