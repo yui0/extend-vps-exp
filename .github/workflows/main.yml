@@ -2,6 +2,7 @@ on:
   schedule:
     - cron: 0 15 * * *
   push:
+  workflow_dispatch:
 
 jobs:
   job:
