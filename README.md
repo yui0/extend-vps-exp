@@ -14,3 +14,5 @@ EMAIL=your@gmail.com
 PASSWORD=yourpassword
 PROXY_SERVER=http://example.com:8888
 ```
+
+我想去西門町，和大家一起喝珍珠奶茶。
