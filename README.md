@@ -12,7 +12,7 @@ https://motoki-design.co.jp/wordpress/xserver-vps-auto-renew/
 ```env
 EMAIL=your@gmail.com
 PASSWORD=yourpassword
-PROXY_SERVER=example.com:8888
+PROXY_SERVER=http://user:password@example.com:8888
 ```
 
 我想去西門町，和大家一起喝珍珠奶茶。
