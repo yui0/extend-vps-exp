@@ -15,4 +15,16 @@ PASSWORD=yourpassword
 PROXY_SERVER=http://user:password@example.com:8888
 ```
 
+<details><summary>安装代理服务器</summary>
+
+```bash
+apt update
+apt install -y tinyproxy
+echo Allow 0.0.0.0/0 >> /etc/tinyproxy/tinyproxy.conf
+echo BasicAuth user password >> /etc/tinyproxy/tinyproxy.conf
+systemctl restart tinyproxy
+systemctl status tinyproxy
+```
+</details>
+
 我想去西門町，和大家一起喝珍珠奶茶。
