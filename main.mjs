@@ -3,7 +3,10 @@ import { setTimeout } from 'node:timers/promises'
 
 const args = ['--no-sandbox', '--disable-setuid-sandbox']
 if (process.env.PROXY_SERVER) {
-    args.push('--proxy-server=' + process.env.PROXY_SERVER)
+    const proxy_url = new URL(process.env.PROXY_SERVER)
+    proxy_url.username = ''
+    proxy_url.password = ''
+    args.push(`--proxy-server=${proxy_url}`.replace(/\/$/, ''))
 }
 
 const browser = await puppeteer.launch({
@@ -14,6 +17,13 @@ const [page] = await browser.pages()
 const recorder = await page.screencast({ path: 'recording.webm' })
 
 try {
+    if (process.env.PROXY_SERVER) {
+        const { username, password } = new URL(process.env.PROXY_SERVER)
+        if (username && password) {
+            await page.authenticate({ username, password })
+        }
+    }
+
     await page.goto('https://secure.xserver.ne.jp/xapanel/login/xserver/', { waitUntil: 'networkidle2' })
     await page.locator('#memberid').fill(process.env.EMAIL)
     await page.locator('#user_password').fill(process.env.PASSWORD)
