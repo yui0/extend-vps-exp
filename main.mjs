@@ -35,8 +35,8 @@ try {
     await page.waitForNavigation({ waitUntil: 'networkidle2' })
     const src = await page.$eval('img[src^="data:"]', img => img.src)
     console.log(src)
-    await page.locator('text=上の画像の数字を入力').fill(123456)
-    await setTimeout(5000)
+    await setTimeout(1000)
+    await page.locator('[name="auth_code"]').fill(123456)
     await page.locator('text=無料VPSの利用を継続する').click()
 } catch (e) {
     console.error(e)
