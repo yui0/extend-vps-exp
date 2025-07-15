@@ -7,7 +7,7 @@ https://motoki-design.co.jp/wordpress/xserver-vps-auto-renew/
 手册
 https://motoki-design.co.jp/wordpress/xserver-vps-auto-renew/
 
-![Clipchamp5-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/04873d89-97a5-49c1-b0c0-390ae2fce86f)
+![Clipchamp6-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/03674e4a-6633-46da-910d-06d433757632)
 
 如果不起作用，请设置 GitHub Actions 的 Secrets 环境变量。
 
