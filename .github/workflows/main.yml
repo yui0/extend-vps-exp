@@ -16,6 +16,7 @@ jobs:
         env:
           EMAIL: ${{ secrets.EMAIL }}
           PASSWORD: ${{ secrets.PASSWORD }}
+          PROXY_SERVER: ${{ secrets.PROXY_SERVER }}
       - uses: actions/upload-artifact@v4
         with:
           path: recording.webm

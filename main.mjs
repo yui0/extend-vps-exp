@@ -1,9 +1,14 @@
 import puppeteer from 'puppeteer'
 import { setTimeout } from 'node:timers/promises'
 
+const args = ['--no-sandbox', '--disable-setuid-sandbox']
+if (process.env.PROXY_SERVER) {
+    args.push('--proxy-server=' + process.env.PROXY_SERVER)
+}
+
 const browser = await puppeteer.launch({
     defaultViewport: { width: 1080, height: 1024 },
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args,
 })
 const [page] = await browser.pages()
 const recorder = await page.screencast({ path: 'recording.webm' })
