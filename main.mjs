@@ -33,10 +33,9 @@ try {
     await page.locator('text=更新する').click()
     await page.locator('text=引き続き無料VPSの利用を継続する').click()
     await page.waitForNavigation({ waitUntil: 'networkidle2' })
-    const img = await page.$('img[src^="data:"]')
-    const src = await img.getProperty('src')
+    const src = await page.$eval('img[src^="data:"]', img => img.src)
     console.log(src)
-    await page.locator('input[name="auth_code"]').fill(123456)
+    await page.locator('text=上の画像の数字を入力').fill(123456)
     await setTimeout(5000)
     await page.locator('text=無料VPSの利用を継続する').click()
 } catch (e) {
