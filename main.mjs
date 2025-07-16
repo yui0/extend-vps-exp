@@ -23,8 +23,10 @@ try {
             await page.authenticate({ username, password })
         }
     }
-    await page.goto('https://gs.statcounter.com/detect', { waitUntil: 'networkidle2' })
-    await setTimeout(5000)
+    await page.goto('https://testpage.jp/tool/ip_user_agent.php', { waitUntil: 'networkidle2' })
+    await setTimeout(3000)
+    await page.goto('https://dnschecker.org/user-agent-info.php', { waitUntil: 'networkidle2' })
+    await setTimeout(3000)
     throw new Error('Hello')
 
     await page.goto('https://secure.xserver.ne.jp/xapanel/login/xvps/', { waitUntil: 'networkidle2' })
