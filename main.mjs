@@ -23,7 +23,8 @@ try {
             await page.authenticate({ username, password })
         }
     }
-    await page.goto('https://www.ugtop.com/spill.shtml', { waitUntil: 'networkidle2' })
+    await page.goto('https://gs.statcounter.com/detect', { waitUntil: 'networkidle2' })
+    await setTimeout(5000)
     throw new Error('Hello')
 
     await page.goto('https://secure.xserver.ne.jp/xapanel/login/xvps/', { waitUntil: 'networkidle2' })
