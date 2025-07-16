@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer'
 import { setTimeout } from 'node:timers/promises'
 
-const args = ['--no-sandbox', '--disable-setuid-sandbox']
+const args = ['--headless=new', '--no-sandbox', '--disable-setuid-sandbox']
 if (process.env.PROXY_SERVER) {
     const proxy_url = new URL(process.env.PROXY_SERVER)
     proxy_url.username = ''
