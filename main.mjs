@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer'
 import { setTimeout } from 'node:timers/promises'
 
-const args = ['--headless=new', '--no-sandbox', '--disable-setuid-sandbox']
+const args = ['--no-sandbox', '--disable-setuid-sandbox']
 if (process.env.PROXY_SERVER) {
     const proxy_url = new URL(process.env.PROXY_SERVER)
     proxy_url.username = ''
@@ -14,6 +14,8 @@ const browser = await puppeteer.launch({
     args,
 })
 const [page] = await browser.pages()
+const userAgent = await browser.userAgent()
+await page.setUserAgent(userAgent.replace('Headless', ''))
 const recorder = await page.screencast({ path: 'recording.webm' })
 
 try {
