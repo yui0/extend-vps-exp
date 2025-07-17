@@ -26,12 +26,13 @@ if (location.pathname.startsWith('/xapanel/login/xvps')) {
         unsafeWindow.memberid.value = memberid
         unsafeWindow.user_password.value = user_password
         unsafeWindow.login_area.submit()
-    } else {
-        const email = prompt('Email', memberid ?? '')
-        const password = prompt('Password', user_password ?? '')
-        if (email) GM_setValue('memberid', email)
-        if (password) GM_setValue('user_password', password)
     }
+    document.querySelector('[value="ログインする"]').removeAttribute('onclick')
+    document.querySelector('[value="ログインする"]').addEventListener('click', e => {
+        console.log(unsafeWindow.memberid.value, unsafeWindow.user_password.value)
+        if (unsafeWindow.memberid.value) GM_setValue('memberid', unsafeWindow.memberid.value)
+        if (unsafeWindow.user_password.value) GM_setValue('user_password', unsafeWindow.user_password.value)
+    })
 }
 
 // Check expiration date
