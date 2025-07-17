@@ -14,7 +14,7 @@
 // ==/UserScript==
 
 // Usage:
-//   1. Please bookmark https://secure.xserver.ne.jp/xapanel/xvps/index
+//   1. Please bookmark https://secure.xserver.ne.jp/xapanel/login/xvps
 //   2. Open the URL everyday
 //   3. (option) Save email and password on Login page
 
