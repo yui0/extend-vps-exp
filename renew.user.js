@@ -14,7 +14,7 @@
 // ==/UserScript==
 
 // Usage:
-//   1. Please bookmark https://secure.xserver.ne.jp/xapanel/login/xvps
+//   1. Please bookmark https://secure.xserver.ne.jp/xapanel/login/xvps/
 //   2. Open the URL everyday
 //   3. (option) Save email and password on Login page
 
@@ -59,11 +59,11 @@ if (location.pathname.startsWith('/xapanel/xvps/index')) {
 }
 
 // Solve CAPTCHA
-if (location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/conf') && unsafeWindow.submit_button) {
+if ((location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/conf') || location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/do')) && unsafeWindow.submit_button) {
     const body = document.querySelector('img[src^="data:"]').src
     const code = await fetch('https://captcha-120546510085.asia-northeast1.run.app', { method: 'POST', body }).then(r => r.text())
-    document.querySelector('[name=auth_code]').value = code
-    const cf = document.querySelector('[name=cf-turnstile-response]')
-    if (cf.value) unsafeWindow.submit_button.click()
-    new MutationObserver(() => unsafeWindow.submit_button.click()).observe(cf, { attributes: true, attributeFilter: ['value'] })
+    document.querySelector('[placeholder="上の画像の数字を入力"]').value = code
+    setInterval(() => {
+        if (document.querySelector('[name=cf-turnstile-response]').value) unsafeWindow.submit_button.click()
+    }, 1000)
 }
