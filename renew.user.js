@@ -32,6 +32,7 @@ if (location.pathname.startsWith('/xapanel/login/xvps')) {
         console.log(unsafeWindow.memberid.value, unsafeWindow.user_password.value)
         if (unsafeWindow.memberid.value) GM_setValue('memberid', unsafeWindow.memberid.value)
         if (unsafeWindow.user_password.value) GM_setValue('user_password', unsafeWindow.user_password.value)
+        if (unsafeWindow.memberid.value && unsafeWindow.user_password.value) location.reload()
     })
 }
 
