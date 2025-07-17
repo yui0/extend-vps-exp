@@ -30,3 +30,5 @@ systemctl status tinyproxy
 </details>
 
 我想去西門町，和大家一起喝珍珠奶茶。
+
+[![お前ら人間じゃねぇ！](https://img.youtube.com/vi/z2xJgyf5Nu0/hqdefault.jpg)](https://www.youtube.com/watch?v=z2xJgyf5Nu0 "お前ら人間じゃねぇ！")
