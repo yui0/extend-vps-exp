@@ -9,7 +9,7 @@ https://motoki-design.co.jp/wordpress/xserver-vps-auto-renew/
 
 ![Clipchamp7-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/745a85ef-0d5a-4532-9774-3b7fcb2c8b52)
 
-我制作了 Tampermonkey [Install](https://raw.githubusercontent.com/GitHub30/extend-vps-exp/refs/heads/main/renew.user.js) 然后，请访问：https://secure.xserver.ne.jp/xapanel/xvps/index
+我制作了 Tampermonkey [Install](https://raw.githubusercontent.com/GitHub30/extend-vps-exp/refs/heads/main/renew.user.js) 然后，请访问：https://secure.xserver.ne.jp/xapanel/login/xvps
 
 如果不起作用，请设置 GitHub Actions 的 Secrets 环境变量。
 
