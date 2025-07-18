@@ -40,24 +40,15 @@ if (location.pathname.startsWith('/xapanel/login/xvps')) {
 if (location.pathname.startsWith('/xapanel/xvps/index')) {
     const tomorrow = new Date(Date.now() + 864e5).toLocaleDateString('sv')
     const expireDate = document.querySelector('tr:has(.freeServerIco) .contract__term')?.textContent
-    if (expireDate === tomorrow) {
-        const form = document.createElement('form')
-        form.method = 'POST'
-        form.action = '/xapanel/xvps/server/freevps/extend/conf'
-        const data = {
-            uniqid: crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', ''),
-            ethna_csrf: '',
-            id_vps: new URL(document.querySelector('tr:has(.freeServerIco) a[href^="/xapanel/xvps/server/detail?id="]')).searchParams.get('id'),
-            auth_code: '',
-            'cf-turnstile-response': ''
-        }
-        for(const [name, value] of Object.entries(data)) {
-            const input = form.appendChild(document.createElement('input'))
-            input.name = name
-            input.value = value
-        }
-        document.body.appendChild(form).submit()
+    if (expireDate === tomorrow || true) {
+        const href = document.querySelector('tr:has(.freeServerIco) a[href^="/xapanel/xvps/server/detail?id="]').href
+        location = href.replace('detail?id', 'freevps/extend/index?id_vps')
     }
+}
+
+// Extend expiration date
+if (location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/index')) {
+    document.querySelector('[formaction="/xapanel/xvps/server/freevps/extend/conf"]').click()
 }
 
 // Solve CAPTCHA
