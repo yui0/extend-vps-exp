@@ -54,7 +54,7 @@ if ((location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/conf') ||
     const body = document.querySelector('img[src^="data:"]').src
     const code = await fetch('https://captcha-120546510085.asia-northeast1.run.app', { method: 'POST', body }).then(r => r.text())
     document.querySelector('[placeholder="上の画像の数字を入力"]').value = code
-    setInterval(() => {
-        if (document.querySelector('[name=cf-turnstile-response]').value) unsafeWindow.submit_button.click()
-    }, 1000)
+    const cf = document.querySelector('.cf-turnstile [name=cf-turnstile-response]')
+    if (cf.value) unsafeWindow.submit_button.click()
+    new MutationObserver(() => unsafeWindow.submit_button.click()).observe(cf, { attributes: true, attributeFilter: ['value'] })
 }
