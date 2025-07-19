@@ -1,3 +1,5 @@
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1l1fAyDzNSSCVOF_JBpXRp2b3SHuI5bz6?usp=sharing) Accuracy 100% CAPTCHA weight: xserver_captcha.keras
+
 マニュアル
 https://motoki-design.co.jp/wordpress/xserver-vps-auto-renew/
 
