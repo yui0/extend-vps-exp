@@ -58,23 +58,27 @@
      * @description 登录页面逻辑：自动填充并保存用户凭据。
      */
     if (location.pathname.startsWith('/xapanel/login/xvps')) {
+        console.log(`[VPS续期脚本] 当前在登录页面。`);
         const memberid = GM_getValue('memberid');
         const user_password = GM_getValue('user_password');
 
         // 如果存在已保存的凭据且页面没有显示错误消息，则自动填充并登录
         if (memberid && user_password && !document.querySelector('.errorMessage')) {
+            console.log(`[VPS续期脚本] 发现已保存的凭据，正在尝试自动登录...`);
             unsafeWindow.memberid.value = memberid;
             unsafeWindow.user_password.value = user_password;
             // 调用页面自带的登录函数
             unsafeWindow.loginFunc();
+        } else {
+            console.log(`[VPS续期脚本] 未发现凭据或页面有错误信息，等待用户手动操作。`);
         }
 
         // 监听登录表单的提交事件，以便保存用户输入的凭据
-        // 确保 jQuery 已加载
         if (typeof $ !== 'undefined') {
             $('#login_area').on('submit', () => {
                 GM_setValue('memberid', unsafeWindow.memberid.value);
                 GM_setValue('user_password', unsafeWindow.user_password.value);
+                console.log(`[VPS续期脚本] 已保存新的用户凭据。`);
             });
         }
     }
@@ -86,12 +90,19 @@
         // 计算明天的日期，格式为 YYYY-MM-DD (瑞典时区格式)
         const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv');
         const expireDate = document.querySelector('tr:has(.freeServerIco) .contract__term')?.textContent;
+        
+        console.log(`[VPS续期脚本] 检查到期时间...`);
+        console.log(`[VPS续期脚本] 页面上的到期日: ${expireDate || '未找到'}`);
+        console.log(`[VPS续期脚本] 明天的日期: ${tomorrow}`);
 
         // 如果到期日是明天，则准备续期
         if (expireDate === tomorrow) {
+            console.log(`[VPS续期脚本] 条件满足：到期日为明天。正在跳转到续期页面...`);
             const href = document.querySelector('tr:has(.freeServerIco) a[href^="/xapanel/xvps/server/detail?id="]').href;
             // 跳转到续期页面
             location.href = href.replace('detail?id', 'freevps/extend/index?id_vps');
+        } else {
+            console.log(`[VPS续期脚本] 条件不满足：无需执行续期操作。`);
         }
     }
 
@@ -99,9 +110,13 @@
      * @description 续期申请页面逻辑：自动点击确认按钮。
      */
     if (location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/index')) {
+        console.log(`[VPS续期脚本] 当前在续期申请页面。`);
         const extendButton = document.querySelector('[formaction="/xapanel/xvps/server/freevps/extend/conf"]');
         if (extendButton) {
+            console.log(`[VPS续期脚本] 找到续期按钮，正在点击...`);
             extendButton.click();
+        } else {
+            console.log(`[VPS续期脚本] 未找到续期按钮。`);
         }
     }
 
@@ -111,35 +126,41 @@
      */
     if ((location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/conf') || location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/do')) && unsafeWindow.submit_button) {
         (async function() {
+            console.log(`[VPS续期脚本] 当前在验证码页面，开始处理验证码...`);
             try {
                 const img = document.querySelector('img[src^="data:"]');
                 if (!img) {
-                    console.log('CAPTCHA image not found.');
+                    console.log('[VPS续期脚本] 未找到验证码图片。');
                     return;
                 }
+                console.log('[VPS续期脚本] 已找到验证码图片，正在发送到API进行识别...');
 
                 const body = img.src;
                 // 调用外部API来识别验证码图片
                 const code = await fetch('https://captcha-120546510085.asia-northeast1.run.app', { method: 'POST', body }).then(r => r.text());
+                console.log(`[VPS续期脚本] API返回验证码: ${code}`);
 
                 const input = document.querySelector('[placeholder="上の画像の数字を入力"]');
                 if (input) {
                     input.value = code;
+                    console.log(`[VPS续期脚本] 已将验证码填入输入框。`);
                 }
 
                 // 处理 Cloudflare Turnstile 人机验证
                 const cf = document.querySelector('.cf-turnstile [name=cf-turnstile-response]');
                 if (cf) {
-                    // 如果令牌已经存在，直接点击提交
+                    console.log(`[VPS续期脚本] 正在处理 Cloudflare Turnstile...`);
                     if (cf.value) {
+                        console.log(`[VPS续期脚本] Cloudflare 令牌已存在，直接提交表单。`);
                         unsafeWindow.submit_button.click();
                         return;
                     }
-                    // 如果令牌尚不存在，则使用 MutationObserver 监听其值的变化
+                    console.log(`[VPS续期脚本] Cloudflare 令牌不存在，设置监听器等待生成...`);
                     // 一旦 cf-turnstile-response 的 value 被填充，就立即点击提交按钮
                     new MutationObserver((mutationsList, observer) => {
                         for(const mutation of mutationsList) {
                             if (mutation.type === 'attributes' && mutation.attributeName === 'value' && cf.value) {
+                                console.log(`[VPS续期脚本] Cloudflare 令牌已生成，正在提交表单...`);
                                 unsafeWindow.submit_button.click();
                                 observer.disconnect(); // 任务完成，停止监听
                             }
@@ -147,7 +168,7 @@
                     }).observe(cf, { attributes: true, attributeFilter: ['value'] });
                 }
             } catch (error) {
-                console.error('Error solving CAPTCHA:', error);
+                console.error('[VPS续期脚本] 处理验证码时发生错误:', error);
             }
         })();
     }
