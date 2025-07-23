@@ -88,7 +88,7 @@
      */
     if (location.pathname.startsWith('/xapanel/xvps/index')) {
         // 计算明天的日期，格式为 YYYY-MM-DD (瑞典时区格式)
-        const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv');
+        const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv', { timeZone: 'Asia/Tokyo' });
         const expireDate = document.querySelector('tr:has(.freeServerIco) .contract__term')?.textContent;
         
         console.log(`[VPS续期脚本] 检查到期时间...`);
