@@ -31,7 +31,13 @@ try {
     await page.locator('#user_password').fill(process.env.PASSWORD)
     await page.locator('text=ログインする').click()
     await page.waitForNavigation({ waitUntil: 'networkidle2' })
-    // TODO: Alert Upcoming Expiration Notice with Email, Slack, Discord
+    const expireDate = await page.$eval('tr:has(.freeServerIco) .contract__term', p => p.textContent)
+    const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv', { timeZone: 'Asia/Tokyo' })
+    console.log('expireDate', expireDate, 'tomorrow', tomorrow, expireDate === tomorrow)
+    // 如果到期日是明天，则准备续期
+    if (expireDate === tomorrow) {
+        // TODO: Alert Upcoming Expiration Notice with Email, Slack, Discord
+    }
 } catch (e) {
     console.error(e)
 } finally {
