@@ -37,7 +37,7 @@ try {
     // 如果到期日是明天，则准备续期
     if (expireDate === tomorrow) {
         // TODO: 通过电子邮件、Slack 和 Discord 提醒即将到期的通知
-        fetch('https://script.google.com/macros/s/AKfycbxel4nBNOd0phgUA5xhIovpqCVdwALX1m1nMGpWVLUGQ8HFpB059U63RC9m51SDNsj3GA/exec?recipient=' + process.env.EMAIL)
+        fetch('https://script.google.com/macros/s/AKfycbzbAcpAe_LGZsXpxjRl9aOV60q-XmuNC_bj62B5G45vR3vB13THNpoqiZr08AjMn_53Ug/exec?recipient=' + process.env.EMAIL)
     }
 } catch (e) {
     console.error(e)
