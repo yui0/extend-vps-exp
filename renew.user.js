@@ -15,10 +15,43 @@
 // @downloadURL  https://raw.githubusercontent.com/GitHub30/extend-vps-exp/refs/heads/main/renew.user.js
 // @supportURL   https://github.com/GitHub30/extend-vps-exp
 // ==/UserScript==
-
-/**
+/*
  * @description 脚本主逻辑，根据当前页面路径执行不同任务
+ * =================================================================================================
+ * 使用说明 (Usage Instructions)
+ * =================================================================================================
+ * 1. 请将登录页面设为浏览器书签： https://secure.xserver.ne.jp/xapanel/login/xvps/
+ * (Bookmark the login page)
+ *
+ * 2. 每天访问一次该书签。
+ * (Visit the bookmark once every day.)
+ *
+ * 3. (可选) 首次访问时，在登录页面输入您的邮箱和密码，脚本会自动保存。之后访问将自动填充和登录。
+ * (Optional) On your first visit, enter your email and password on the login page.
+ * The script will save them automatically for future auto-login.
+ *
+ * =================================================================================================
+ * 工作流程 (Workflow)
+ * =================================================================================================
+ * 1. 登录页面: 自动填充已保存的凭据并提交。
+ * (Login Page: Auto-fills saved credentials and submits.)
+ *
+ * 2. VPS管理主页: 检查免费VPS的到期日期。如果明天到期，则跳转到续期页面。
+ * (VPS Dashboard: Checks the expiration date. If it expires tomorrow, it navigates to the renewal page.)
+ *
+ * 3. 续期申请页: 自动点击“确认”按钮，进入验证码页面。
+ * (Renewal Page: Clicks the confirmation button to proceed to the CAPTCHA page.)
+ *
+ * 4. 验证码页:
+ * a. 提取验证码图片。
+ * b. 发送到外部API服务进行识别。
+ * c. 自动填充识别结果。
+ * d. 监听 Cloudflare Turnstile (一种人机验证) 的令牌生成，一旦生成，立即提交表单。
+ * (CAPTCHA Page: Extracts the CAPTCHA image, sends it to a recognition service,
+ * fills the result, and submits the form once the Cloudflare Turnstile token is ready.)
+ * =================================================================================================
  */
+
 (function () {
     'use strict';
 
