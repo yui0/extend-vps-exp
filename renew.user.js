@@ -10,11 +10,11 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=xserver.ne.jp
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_addStyle
 // @updateURL    https://raw.githubusercontent.com/GitHub30/extend-vps-exp/refs/heads/main/renew.user.js
 // @downloadURL  https://raw.githubusercontent.com/GitHub30/extend-vps-exp/refs/heads/main/renew.user.js
 // @supportURL   https://github.com/GitHub30/extend-vps-exp
 // ==/UserScript==
-
 /*
  * =================================================================================================
  * 使用说明 (Usage Instructions)
@@ -51,125 +51,383 @@
  * =================================================================================================
  */
 
-(function() {
+(function () {
     'use strict';
 
+    // 给脚本日志添加统一前缀，便于识别
+    const LOG_PREFIX = "[VPS续期脚本]";
+
+    let isRunning = false;
+
+    GM_addStyle(`
+        #vps-renewal-progress {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 10000;
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+    `);
+
+    // 等待DOM加载完成
+    function waitForDOMReady() {
+        return new Promise(resolve => {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', resolve);
+            } else {
+                resolve();
+            }
+        });
+    }
+
+    // 等待jQuery加载完成
+    function waitForjQuery() {
+        return new Promise(resolve => {
+            if (typeof $ !== 'undefined') {
+                resolve();
+            } else {
+                const checkjQuery = setInterval(() => {
+                    if (typeof $ !== 'undefined') {
+                        clearInterval(checkjQuery);
+                        resolve();
+                    }
+                }, 50);
+            }
+        });
+    }
+
     /**
-     * @description 登录页面逻辑：自动填充并保存用户凭据。
+     * 创建一个状态提示元素并显示消息
      */
-    if (location.pathname.startsWith('/xapanel/login/xvps')) {
-        console.log(`[VPS续期脚本] 当前在登录页面。`);
+    function createStatusElement(message) {
+        removeStatusElement(); // 先移除已有的元素
+        const statusEl = document.createElement('div');
+        statusEl.id = 'vps-renewal-progress';
+        statusEl.textContent = message;
+        document.body.appendChild(statusEl);
+    }
+
+    /**
+     * 更新或移除状态提示元素
+     */
+    function updateStatusElement(message) {
+        const statusEl = document.getElementById('vps-renewal-progress');
+        if (statusEl) {
+            statusEl.textContent = message;
+        } else {
+            createStatusElement(message);
+        }
+    }
+
+    function removeStatusElement() {
+        const statusEl = document.getElementById('vps-renewal-progress');
+        if (statusEl) {
+            statusEl.remove();
+        }
+    }
+
+    /**
+     * 登录页面逻辑：自动填充并保存用户凭据
+     */
+    async function handleLogin() {
+        console.log(`${LOG_PREFIX} 当前在登录页面。`);
+        updateStatusElement("正在处理登录...");
+
         const memberid = GM_getValue('memberid');
         const user_password = GM_getValue('user_password');
 
-        // 如果存在已保存的凭据且页面没有显示错误消息，则自动填充并登录
+        // 判断是否可以进行自动登录（存在保存的凭据并且没有错误）
         if (memberid && user_password && !document.querySelector('.errorMessage')) {
-            console.log(`[VPS续期脚本] 发现已保存的凭据，正在尝试自动登录...`);
-            unsafeWindow.memberid.value = memberid;
-            unsafeWindow.user_password.value = user_password;
-            // 调用页面自带的登录函数
-            unsafeWindow.loginFunc();
-        } else {
-            console.log(`[VPS续期脚本] 未发现凭据或页面有错误信息，等待用户手动操作。`);
-        }
-
-        // 监听登录表单的提交事件，以便保存用户输入的凭据
-        if (typeof $ !== 'undefined') {
-            $('#login_area').on('submit', () => {
-                GM_setValue('memberid', unsafeWindow.memberid.value);
-                GM_setValue('user_password', unsafeWindow.user_password.value);
-                console.log(`[VPS续期脚本] 已保存新的用户凭据。`);
-            });
-        }
-    }
-
-    /**
-     * @description VPS 管理主页逻辑：检查到期时间并跳转。
-     */
-    if (location.pathname.startsWith('/xapanel/xvps/index')) {
-        // 计算明天的日期，格式为 YYYY-MM-DD (瑞典时区格式)
-        const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv', { timeZone: 'Asia/Tokyo' });
-        const expireDate = document.querySelector('tr:has(.freeServerIco) .contract__term')?.textContent;
-        
-        console.log(`[VPS续期脚本] 检查到期时间...`);
-        console.log(`[VPS续期脚本] 页面上的到期日: ${expireDate || '未找到'}`);
-        console.log(`[VPS续期脚本] 明天的日期: ${tomorrow}`);
-
-        // 如果到期日是明天，则准备续期
-        if (expireDate === tomorrow) {
-            console.log(`[VPS续期脚本] 条件满足：到期日为明天。正在跳转到续期页面...`);
-            const href = document.querySelector('tr:has(.freeServerIco) a[href^="/xapanel/xvps/server/detail?id="]').href;
-            // 跳转到续期页面
-            location.href = href.replace('detail?id', 'freevps/extend/index?id_vps');
-        } else {
-            console.log(`[VPS续期脚本] 条件不满足：无需执行续期操作。`);
-        }
-    }
-
-    /**
-     * @description 续期申请页面逻辑：自动点击确认按钮。
-     */
-    if (location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/index')) {
-        console.log(`[VPS续期脚本] 当前在续期申请页面。`);
-        const extendButton = document.querySelector('[formaction="/xapanel/xvps/server/freevps/extend/conf"]');
-        if (extendButton) {
-            console.log(`[VPS续期脚本] 找到续期按钮，正在点击...`);
-            extendButton.click();
-        } else {
-            console.log(`[VPS续期脚本] 未找到续期按钮。`);
-        }
-    }
-
-    /**
-     * @description 验证码页面逻辑：识别并提交验证码。
-     * 使用 IIFE (立即调用的函数表达式) 来创建异步上下文，以便使用 await。
-     */
-    if ((location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/conf') || location.pathname.startsWith('/xapanel/xvps/server/freevps/extend/do')) && unsafeWindow.submit_button) {
-        (async function() {
-            console.log(`[VPS续期脚本] 当前在验证码页面，开始处理验证码...`);
+            console.log(`${LOG_PREFIX} 发现已保存的凭据，正在尝试自动登录...`);
             try {
-                const img = document.querySelector('img[src^="data:"]');
-                if (!img) {
-                    console.log('[VPS续期脚本] 未找到验证码图片。');
-                    return;
+                // 确保表单元素存在再进行赋值
+                if (unsafeWindow.memberid && unsafeWindow.user_password) {
+                    unsafeWindow.memberid.value = memberid;
+                    unsafeWindow.user_password.value = user_password;
+                    updateStatusElement("已检测到保存凭据，正在自动登录...");
+                    // 延迟调用避免页面未完全渲染的问题
+                    setTimeout(() => {
+                        if (typeof unsafeWindow.loginFunc === 'function') {
+                            unsafeWindow.loginFunc();
+                        } else {
+                            console.warn(`${LOG_PREFIX} 页面登录函数 loginFunc 不存在或不是函数。`);
+                            updateStatusElement("警告：登录函数异常，请手动登录。");
+                        }
+                    }, 500);
+                } else {
+                    throw new Error('登录表单元素不存在');
                 }
-                console.log('[VPS续期脚本] 已找到验证码图片，正在发送到API进行识别...');
+            } catch (e) {
+                console.error(`${LOG_PREFIX} 自动登录失败: `, e);
+                updateStatusElement("自动登录失败，请手动登录。");
+            }
+        } else {
+            console.log(`${LOG_PREFIX} 未发现凭据或页面有错误信息，等待用户手动操作。`);
+            // 监听用户提交登录表单以保存数据
+            await waitForjQuery();
+            if (typeof $ !== 'undefined') {
+                $('#login_area').on('submit', function () {
+                    try {
+                        // 防止重复保存
+                        if (unsafeWindow.memberid && unsafeWindow.user_password) {
+                            GM_setValue('memberid', unsafeWindow.memberid.value);
+                            GM_setValue('user_password', unsafeWindow.user_password.value);
+                            console.log(`${LOG_PREFIX} 已保存新的用户凭据。`);
+                        }
+                    } catch (e) {
+                        console.error(`${LOG_PREFIX} 保存凭据时出错:`, e);
+                    }
+                });
+            }
+        }
+    }
 
-                const body = img.src;
-                // 调用外部API来识别验证码图片
-                const code = await fetch('https://captcha-120546510085.asia-northeast1.run.app', { method: 'POST', body }).then(r => r.text());
-                console.log(`[VPS续期脚本] API返回验证码: ${code}`);
+    /**
+     * VPS管理主页逻辑：检查到期时间和跳转
+     */
+    function handleVPSDashboard() {
+        console.log(`${LOG_PREFIX} 当前在VPS管理主页。`);
+        updateStatusElement("正在检查续期状态...");
 
-                const input = document.querySelector('[placeholder="上の画像の数字を入力"]');
-                if (input) {
-                    input.value = code;
-                    console.log(`[VPS续期脚本] 已将验证码填入输入框。`);
+        try {
+            // 计算明天的日期，格式为 yyyy-mm-dd (瑞典时区格式更稳定)
+            const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv', { timeZone: 'Asia/Tokyo' });
+            const row = document.querySelector('tr:has(.freeServerIco)');
+
+            if (!row) {
+                console.log(`${LOG_PREFIX} 未找到免费VPS条目。`);
+                updateStatusElement("未找到免费VPS。");
+                return;
+            }
+
+            const expireSpan = row.querySelector('.contract__term');
+            const expireDate = expireSpan ? expireSpan.textContent.trim() : null;
+
+            console.log(`${LOG_PREFIX} 页面上的到期日: ${expireDate || '未找到'}`);
+            console.log(`${LOG_PREFIX} 明天的日期: ${tomorrow}`);
+
+            if (expireDate === tomorrow) {
+                console.log(`${LOG_PREFIX} 条件满足：到期日为明天。正在跳转到续期页面...`);
+                const detailLink = row.querySelector('a[href^="/xapanel/xvps/server/detail?id="]');
+                if (detailLink && detailLink.href) {
+                    updateStatusElement("检测到即将过期，正在续期...");
+                    setTimeout(() => {
+                        location.href = detailLink.href.replace('detail?id', 'freevps/extend/index?id_vps');
+                    }, 1000);
+                } else {
+                    throw new Error('无法定位续期链接');
                 }
+            } else {
+                console.log(`${LOG_PREFIX} 条件不满足：无需执行续期操作。`);
+                updateStatusElement("当前VPS无需续期。");
+                setTimeout(removeStatusElement, 3000);
+            }
+        } catch (e) {
+            console.error(`${LOG_PREFIX} 在VPS管理主页处理出现错误:`, e);
+            updateStatusElement("检查续期状态出错，请刷新页面重试。");
+        }
+    }
 
-                // 处理 Cloudflare Turnstile 人机验证
-                const cf = document.querySelector('.cf-turnstile [name=cf-turnstile-response]');
-                if (cf) {
-                    console.log(`[VPS续期脚本] 正在处理 Cloudflare Turnstile...`);
-                    if (cf.value) {
-                        console.log(`[VPS续期脚本] Cloudflare 令牌已存在，直接提交表单。`);
-                        unsafeWindow.submit_button.click();
+    /**
+     * 续期申请页面逻辑：自动点击确认按钮
+     */
+    function handleRenewalPage() {
+        console.log(`${LOG_PREFIX} 当前在续期申请页面。`);
+        updateStatusElement("正在准备续期申请...");
+
+        try {
+            // 延迟一下确保页面内容稳定
+            setTimeout(() => {
+                const extendButton = document.querySelector('[formaction="/xapanel/xvps/server/freevps/extend/conf"]');
+                if (extendButton) {
+                    console.log(`${LOG_PREFIX} 找到续期按钮，正在点击...`);
+                    updateStatusElement("正在确认续期协议...");
+                    setTimeout(() => {
+                        extendButton.click();
+                    }, 800);
+                } else {
+                    throw new Error('未找到续期按钮');
+                }
+            }, 1000);
+        } catch (e) {
+            console.error(`${LOG_PREFIX} 续期确认按钮处理异常:`, e);
+            updateStatusElement("续期申请页面交互失败。");
+        }
+    }
+
+    /**
+     * 验证码页面逻辑：识别并提交验证码
+     */
+    async function handleCaptchaPage() {
+        console.log(`${LOG_PREFIX} 当前在验证码页面，开始处理验证码...`);
+        updateStatusElement("正在识别并输入验证码...");
+
+        try {
+            // 等待DOM加载完成
+            await waitForDOMReady();
+
+            // 查找验证码图片（确保是base64编码）
+            const img = document.querySelector('img[src^="data:image"]') || document.querySelector('img[src^="data:"]');
+            if (!img || !img.src) {
+                throw new Error('未找到验证码图片');
+            }
+
+            console.log(`${LOG_PREFIX} 已找到验证码图片，正在发送到API进行识别...`);
+            updateStatusElement("正在识别验证码，请稍候...");
+
+            // 调用外部API识别验证码
+            let codeResponse;
+            const maxRetries = 3;
+            let retryCount = 0;
+
+            while (retryCount < maxRetries) {
+                try {
+                    const response = await fetch('https://captcha-120546510085.asia-northeast1.run.app', {
+                        method: 'POST',
+                        body: img.src,
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API请求失败: ${response.status}`);
+                    }
+
+                    codeResponse = await response.text();
+                    if (codeResponse && codeResponse.length >= 4) break;
+
+                    throw new Error('API返回无效验证码');
+                } catch (err) {
+                    retryCount++;
+                    if (retryCount >= maxRetries) {
+                        throw err;
+                    }
+                    console.log(`${LOG_PREFIX} 验证码识别失败，正在进行第${retryCount}次重试...`);
+                }
+            }
+
+            const code = codeResponse.trim();
+            if (!code || code.length < 4) {
+                throw new Error('未接收到有效验证码或验证码太短');
+            }
+
+            console.log(`${LOG_PREFIX} API返回验证码: ${code}`);
+            updateStatusElement("验证码识别完成，准备提交表单...");
+
+            // 将验证码填入输入框
+            const input = document.querySelector('[placeholder*="上の画像"]');
+            if (!input) {
+                throw new Error('未找到验证码输入框');
+            }
+
+            input.value = code;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log(`${LOG_PREFIX} 已将验证码填入输入框。`);
+            updateStatusElement("已完成验证码填写，正在处理人机验证...");
+
+            // 处理 Cloudflare Turnstile 人机验证
+            const cfContainer = document.querySelector('.cf-turnstile');
+            if (!cfContainer) {
+                console.warn(`${LOG_PREFIX} 未检测到Cloudflare组件，可能页面结构变化。`);
+                submitForm();
+                return;
+            }
+
+            const cf = cfContainer.querySelector('[name=cf-turnstile-response]');
+            if (cf && cf.value) {
+                console.log(`${LOG_PREFIX} Cloudflare 令牌已存在，直接提交表单。`);
+                submitForm();
+                return;
+            }
+
+            console.log(`${LOG_PREFIX} Cloudflare 令牌不存在，设置监听器等待生成...`);
+            updateStatusElement("等待人机验证令牌生成...");
+
+            // 设置超时机制防止无限等待
+            const timeoutId = setTimeout(() => {
+                console.error(`${LOG_PREFIX} Cloudflare Turnstile令牌生成超时，强制提交表单。`);
+                updateStatusElement("人机验证响应超时，强制提交...");
+                submitForm();
+            }, 15000);
+
+            // 监听cf-turnstile-response字段的value属性变化
+            const observer = new MutationObserver((mutationsList) => {
+                for (const mutation of mutationsList) {
+                    if (
+                        mutation.type === 'attributes' &&
+                        mutation.attributeName === 'value' &&
+                        cf.value
+                    ) {
+                        console.log(`${LOG_PREFIX} Cloudflare 令牌已生成，正在提交表单...`);
+                        clearTimeout(timeoutId);
+                        observer.disconnect();
+                        submitForm();
                         return;
                     }
-                    console.log(`[VPS续期脚本] Cloudflare 令牌不存在，设置监听器等待生成...`);
-                    // 一旦 cf-turnstile-response 的 value 被填充，就立即点击提交按钮
-                    new MutationObserver((mutationsList, observer) => {
-                        for(const mutation of mutationsList) {
-                            if (mutation.type === 'attributes' && mutation.attributeName === 'value' && cf.value) {
-                                console.log(`[VPS续期脚本] Cloudflare 令牌已生成，正在提交表单...`);
-                                unsafeWindow.submit_button.click();
-                                observer.disconnect(); // 任务完成，停止监听
-                            }
-                        }
-                    }).observe(cf, { attributes: true, attributeFilter: ['value'] });
                 }
-            } catch (error) {
-                console.error('[VPS续期脚本] 处理验证码时发生错误:', error);
-            }
-        })();
+            });
+
+            observer.observe(cf, { attributes: true, attributeFilter: ['value'] });
+
+        } catch (error) {
+            console.error(`${LOG_PREFIX} 处理验证码时发生错误:`, error);
+            updateStatusElement("验证码处理异常，请刷新页面重试。");
+        }
+
+        // 提交表单逻辑
+        function submitForm() {
+            updateStatusElement("所有验证已完成，准备提交...");
+            setTimeout(() => {
+                if (typeof unsafeWindow.submit_button !== 'undefined' &&
+                    unsafeWindow.submit_button &&
+                    typeof unsafeWindow.submit_button.click === 'function') {
+                    unsafeWindow.submit_button.click();
+                } else {
+                    const submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.click();
+                    } else {
+                        console.error(`${LOG_PREFIX} 未找到可点击的提交按钮`);
+                        updateStatusElement("找不到提交按钮，请手动提交表单");
+                    }
+                }
+            }, 1000);
+        }
     }
+
+    /**
+     * 主流程分发
+     */
+    function main() {
+        if (isRunning) return; // 防止多重运行
+        isRunning = true;
+
+        const path = window.location.pathname;
+
+        if (path.startsWith('/xapanel/login/xvps')) {
+            handleLogin();
+        } else if (path.includes('/xapanel/xvps/index')) {
+            handleVPSDashboard();
+        } else if (path.includes('/xapanel/xvps/server/freevps/extend/index')) {
+            handleRenewalPage();
+        } else if (
+            path.includes('/xapanel/xvps/server/freevps/extend/conf') ||
+            path.includes('/xapanel/xvps/server/freevps/extend/do')
+        ) {
+            handleCaptchaPage();
+        } else {
+            console.log(`${LOG_PREFIX} 当前不在已支持的路径中，脚本不会执行任何操作。`);
+            isRunning = false;
+        }
+    }
+
+    // 入口调用
+    main();
+
 })();
