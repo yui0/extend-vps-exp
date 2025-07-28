@@ -51,6 +51,35 @@
  * =================================================================================================
  */
 
+// 翻译
+function t(text) {
+    const translations = {
+        '正在处理登录...': { en: 'Processing login...', ja: 'ログインを処理しています...', },
+        '已检测到保存凭据，正在自动登录...': { en: 'Saved credentials detected, automatically logging in...', ja: '保存された認証情報を検出しました。自動ログイン中...', },
+        '警告：登录函数异常，请手动登录。': { en: 'Warning: login function error, please log in manually.', ja: '警告：ログイン機能に異常が発生しました。手動でログインしてください。', },
+        '自动登录失败，请手动登录。': { en: 'Automatic login failed, please log in manually.', ja: '自動ログインに失敗しました。手動でログインしてください。', },
+        '正在检查续期状态...': { en: 'Checking renewal status...', ja: '更新状況を確認しています...', },
+        '未找到免费VPS。': { en: 'No free VPS found.', ja: '無料VPSが見つかりませんでした。', },
+        '检测到即将过期，正在续期...': { en: 'Detected imminent expiration, renewing...', ja: '期限切れが間近であることを検出しました。更新中...', },
+        '当前VPS无需续期。': { en: 'Current VPS does not require renewal.', ja: '現在のVPSは更新不要です。', },
+        '检查续期状态出错，请刷新页面重试。': { en: 'Error checking renewal status, please refresh the page and try again.', ja: '更新状況の確認中にエラーが発生しました。ページをリロードして再試行してください。', },
+        '正在准备续期申请...': { en: 'Preparing renewal request...', ja: '更新リクエストを準備しています...', },
+        '正在确认续期协议...': { en: 'Confirming renewal agreement...', ja: '更新契約を確認しています...', },
+        '续期申请页面交互失败。': { en: 'Failed to interact with the renewal request page.', ja: '更新申請ページの操作に失敗しました。', },
+        '正在识别并输入验证码...': { en: 'Recognizing and entering CAPTCHA...', ja: 'CAPTCHAを認識して入力しています...', },
+        '正在识别验证码，请稍候...': { en: 'Recognizing CAPTCHA, please wait...', ja: 'CAPTCHAを認識しています。しばらくお待ちください...', },
+        '验证码识别完成，准备提交表单...': { en: 'CAPTCHA recognition complete, preparing to submit form...', ja: 'CAPTCHAの認識が完了しました。フォームを送信する準備をしています...', },
+        '已完成验证码填写，正在处理人机验证...': { en: 'CAPTCHA entry complete, processing human verification...', ja: 'CAPTCHAの入力が完了しました。人間認証を処理中...', },
+        '等待人机验证令牌生成...': { en: 'Waiting for human verification token generation...', ja: '人間認証トークンの生成を待っています...', },
+        '人机验证响应超时，强制提交...': { en: 'Human verification response timed out, forcing submission...', ja: '人間認証の応答がタイムアウトしました。強制送信中...', },
+        '验证码处理异常，请刷新页面重试。': { en: 'CAPTCHA processing error, please refresh the page and try again.', ja: 'CAPTCHA処理でエラーが発生しました。ページをリロードして再試行してください。', },
+        '所有验证已完成，准备提交...': { en: 'All verifications completed, preparing to submit...', ja: 'すべての認証が完了しました。送信準備中...', },
+        '找不到提交按钮，请手动提交表单': { en: 'Submit button not found, please submit the form manually.', ja: '送信ボタンが見つかりません。手動でフォームを送信してください。', },
+    }
+    if (!navigator?.language) return text
+    return translations[text]?.[navigator.language.slice(0, 2)] ?? text
+}
+
 (function () {
     'use strict';
 
@@ -108,7 +137,7 @@
         removeStatusElement(); // 先移除已有的元素
         const statusEl = document.createElement('div');
         statusEl.id = 'vps-renewal-progress';
-        statusEl.textContent = message;
+        statusEl.textContent = t(message);
         document.body.appendChild(statusEl);
     }
 
@@ -118,7 +147,7 @@
     function updateStatusElement(message) {
         const statusEl = document.getElementById('vps-renewal-progress');
         if (statusEl) {
-            statusEl.textContent = message;
+            statusEl.textContent = t(message);
         } else {
             createStatusElement(message);
         }
