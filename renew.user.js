@@ -360,6 +360,15 @@ function t(text) {
             console.log(`${LOG_PREFIX} 已将验证码填入输入框。`);
             updateStatusElement("已完成验证码填写，正在处理人机验证...");
 
+            // Cloudflare Turnstileのチェックボックスを自動でクリックする
+            const turnstileCheckbox = document.querySelector('.cf-turnstile .ctp-checkbox-label');
+            if (turnstileCheckbox) {
+                console.log(`${LOG_PREFIX} Cloudflare Turnstileのチェックボックスを検出しました。クリックを試みます...`);
+                turnstileCheckbox.click();
+            } else {
+                console.log(`${LOG_PREFIX} Cloudflare Turnstileのチェックボックスが見つかりませんでした。`);
+            }
+
             // 处理 Cloudflare Turnstile 人机验证
             const cfContainer = document.querySelector('.cf-turnstile');
             if (!cfContainer) {
