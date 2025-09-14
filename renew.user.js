@@ -51,7 +51,7 @@
  * =================================================================================================
  */
 
-// 翻译
+// 翻訳
 function t(text) {
     const translations = {
         '正在处理登录...': { en: 'Processing login...', ja: 'ログインを処理しています...', },
@@ -75,6 +75,7 @@ function t(text) {
         '验证码处理异常，请刷新页面重试。': { en: 'CAPTCHA processing error, please refresh the page and try again.', ja: 'CAPTCHA処理でエラーが発生しました。ページをリロードして再試行してください。', },
         '所有验证已完成，准备提交...': { en: 'All verifications completed, preparing to submit...', ja: 'すべての認証が完了しました。送信準備中...', },
         '找不到提交按钮，请手动提交表单': { en: 'Submit button not found, please submit the form manually.', ja: '送信ボタンが見つかりません。手動でフォームを送信してください。', },
+        'Cloudflare Turnstileのチェックボックスをクリックできませんでした。手動でチェックボックスをクリックしてください。': { en: 'Failed to click Cloudflare Turnstile checkbox. Please click it manually.', ja: 'Cloudflare Turnstileのチェックボックスをクリックできませんでした。手動でチェックボックスをクリックしてください。', }
     }
     if (!navigator?.language) return text
     return translations[text]?.[navigator.language.slice(0, 2)] ?? text
@@ -83,7 +84,7 @@ function t(text) {
 (function () {
     'use strict';
 
-    // 给脚本日志添加统一前缀，便于识别
+    // 給脚本日志添加統一前缀，便於識別
     const LOG_PREFIX = "[VPS续期脚本]";
 
     let isRunning = false;
@@ -131,7 +132,7 @@ function t(text) {
     }
 
     /**
-     * 创建一个状态提示元素并显示消息
+     * 創建一個狀態提示元素並顯示消息
      */
     function createStatusElement(message) {
         removeStatusElement(); // 先移除已有的元素
@@ -142,7 +143,7 @@ function t(text) {
     }
 
     /**
-     * 更新或移除状态提示元素
+     * 更新或移除狀態提示元素
      */
     function updateStatusElement(message) {
         const statusEl = document.getElementById('vps-renewal-progress');
@@ -161,7 +162,7 @@ function t(text) {
     }
 
     /**
-     * 登录页面逻辑：自动填充并保存用户凭据
+     * 登錄頁面邏輯：自動填充並保存用戶憑據
      */
     async function handleLogin() {
         console.log(`${LOG_PREFIX} 当前在登录页面。`);
@@ -170,46 +171,46 @@ function t(text) {
         const memberid = GM_getValue('memberid');
         const user_password = GM_getValue('user_password');
 
-        // 判断是否可以进行自动登录（存在保存的凭据并且没有错误）
+        // 判斷是否可以進行自動登錄（存在保存的憑據並且沒有錯誤）
         if (memberid && user_password && !document.querySelector('.errorMessage')) {
-            console.log(`${LOG_PREFIX} 发现已保存的凭据，正在尝试自动登录...`);
+            console.log(`${LOG_PREFIX} 發現已保存的憑據，正在嘗試自動登錄...`);
             try {
-                // 确保表单元素存在再进行赋值
+                // 確保表單元素存在再進行賦值
                 if (unsafeWindow.memberid && unsafeWindow.user_password) {
                     unsafeWindow.memberid.value = memberid;
                     unsafeWindow.user_password.value = user_password;
                     updateStatusElement("已检测到保存凭据，正在自动登录...");
-                    // 延迟调用避免页面未完全渲染的问题
+                    // 延遲調用避免頁面未完全渲染的問題
                     setTimeout(() => {
                         if (typeof unsafeWindow.loginFunc === 'function') {
                             unsafeWindow.loginFunc();
                         } else {
-                            console.warn(`${LOG_PREFIX} 页面登录函数 loginFunc 不存在或不是函数。`);
+                            console.warn(`${LOG_PREFIX} 頁面登錄函數 loginFunc 不存在或不是函數。`);
                             updateStatusElement("警告：登录函数异常，请手动登录。");
                         }
                     }, 500);
                 } else {
-                    throw new Error('登录表单元素不存在');
+                    throw new Error('登錄表單元素不存在');
                 }
             } catch (e) {
-                console.error(`${LOG_PREFIX} 自动登录失败: `, e);
+                console.error(`${LOG_PREFIX} 自動登錄失敗: `, e);
                 updateStatusElement("自动登录失败，请手动登录。");
             }
         } else {
-            console.log(`${LOG_PREFIX} 未发现凭据或页面有错误信息，等待用户手动操作。`);
-            // 监听用户提交登录表单以保存数据
+            console.log(`${LOG_PREFIX} 未發現憑據或頁面有錯誤信息，等待用戶手動操作。`);
+            // 監聽用戶提交登錄表單以保存數據
             await waitForjQuery();
             if (typeof $ !== 'undefined') {
                 $('#login_area').on('submit', function () {
                     try {
-                        // 防止重复保存
+                        // 防止重複保存
                         if (unsafeWindow.memberid && unsafeWindow.user_password) {
                             GM_setValue('memberid', unsafeWindow.memberid.value);
                             GM_setValue('user_password', unsafeWindow.user_password.value);
-                            console.log(`${LOG_PREFIX} 已保存新的用户凭据。`);
+                            console.log(`${LOG_PREFIX} 已保存新的用戶憑據。`);
                         }
                     } catch (e) {
-                        console.error(`${LOG_PREFIX} 保存凭据时出错:`, e);
+                        console.error(`${LOG_PREFIX} 保存憑據時出錯:`, e);
                     }
                 });
             }
@@ -217,14 +218,14 @@ function t(text) {
     }
 
     /**
-     * VPS管理主页逻辑：检查到期时间和跳转
+     * VPS管理主頁邏輯：檢查到期時間和跳轉
      */
     function handleVPSDashboard() {
         console.log(`${LOG_PREFIX} 当前在VPS管理主页。`);
         updateStatusElement("正在检查续期状态...");
 
         try {
-            // 计算明天的日期，格式为 yyyy-mm-dd (瑞典时区格式更稳定)
+            // 計算明天的日期，格式為 yyyy-mm-dd (瑞典時區格式更穩定)
             const tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv', { timeZone: 'Asia/Tokyo' });
             const row = document.querySelector('tr:has(.freeServerIco)');
 
@@ -241,7 +242,7 @@ function t(text) {
             console.log(`${LOG_PREFIX} 明天的日期: ${tomorrow}`);
 
             if (expireDate === tomorrow) {
-                console.log(`${LOG_PREFIX} 条件满足：到期日为明天。正在跳转到续期页面...`);
+                console.log(`${LOG_PREFIX} 條件滿足：到期日為明天。正在跳轉到續期頁面...`);
                 const detailLink = row.querySelector('a[href^="/xapanel/xvps/server/detail?id="]');
                 if (detailLink && detailLink.href) {
                     updateStatusElement("检测到即将过期，正在续期...");
@@ -249,48 +250,48 @@ function t(text) {
                         location.href = detailLink.href.replace('detail?id', 'freevps/extend/index?id_vps');
                     }, 1000);
                 } else {
-                    throw new Error('无法定位续期链接');
+                    throw new Error('無法定位續期鏈接');
                 }
             } else {
-                console.log(`${LOG_PREFIX} 条件不满足：无需执行续期操作。`);
+                console.log(`${LOG_PREFIX} 條件不滿足：無需執行續期操作。`);
                 updateStatusElement("当前VPS无需续期。");
                 setTimeout(removeStatusElement, 3000);
             }
         } catch (e) {
-            console.error(`${LOG_PREFIX} 在VPS管理主页处理出现错误:`, e);
+            console.error(`${LOG_PREFIX} 在VPS管理主頁處理出現錯誤:`, e);
             updateStatusElement("检查续期状态出错，请刷新页面重试。");
         }
     }
 
     /**
-     * 续期申请页面逻辑：自动点击确认按钮
+     * 續期申請頁面邏輯：自動點擊確認按鈕
      */
     function handleRenewalPage() {
         console.log(`${LOG_PREFIX} 当前在续期申请页面。`);
         updateStatusElement("正在准备续期申请...");
 
         try {
-            // 延迟一下确保页面内容稳定
+            // 延遲一下確保頁面內容穩定
             setTimeout(() => {
                 const extendButton = document.querySelector('[formaction="/xapanel/xvps/server/freevps/extend/conf"]');
                 if (extendButton) {
-                    console.log(`${LOG_PREFIX} 找到续期按钮，正在点击...`);
+                    console.log(`${LOG_PREFIX} 找到續期按鈕，正在點擊...`);
                     updateStatusElement("正在确认续期协议...");
                     setTimeout(() => {
                         extendButton.click();
                     }, 800);
                 } else {
-                    throw new Error('未找到续期按钮');
+                    throw new Error('未找到續期按鈕');
                 }
             }, 1000);
         } catch (e) {
-            console.error(`${LOG_PREFIX} 续期确认按钮处理异常:`, e);
+            console.error(`${LOG_PREFIX} 續期確認按鈕處理異常:`, e);
             updateStatusElement("续期申请页面交互失败。");
         }
     }
 
     /**
-     * 验证码页面逻辑：识别并提交验证码
+     * 驗證碼頁面邏輯：識別並提交驗證碼
      */
     async function handleCaptchaPage() {
         console.log(`${LOG_PREFIX} 当前在验证码页面，开始处理验证码...`);
@@ -360,19 +361,48 @@ function t(text) {
             console.log(`${LOG_PREFIX} 已将验证码填入输入框。`);
             updateStatusElement("已完成验证码填写，正在处理人机验证...");
 
-            // Cloudflare Turnstileのチェックボックスを自動でクリックする
-            const turnstileCheckbox = document.querySelector('.cf-turnstile .ctp-checkbox-label');
-            if (turnstileCheckbox) {
-                console.log(`${LOG_PREFIX} Cloudflare Turnstileのチェックボックスを検出しました。クリックを試みます...`);
-                turnstileCheckbox.click();
-            } else {
-                console.log(`${LOG_PREFIX} Cloudflare Turnstileのチェックボックスが見つかりませんでした。`);
+            // Cloudflare Turnstileチェックボックスを待機
+            async function waitForTurnstileCheckbox() {
+                return new Promise((resolve) => {
+                    const checkExist = setInterval(() => {
+                        const turnstileCheckbox = document.querySelector('.cf-turnstile .ctp-checkbox-label, .cf-turnstile [type="checkbox"]');
+                        if (turnstileCheckbox) {
+                            clearInterval(checkExist);
+                            resolve(turnstileCheckbox);
+                        }
+                    }, 500);
+                    setTimeout(() => {
+                        clearInterval(checkExist);
+                        resolve(null); // 10秒後にタイムアウト
+                    }, 10000);
+                });
             }
 
-            // 处理 Cloudflare Turnstile 人机验证
+            // クリックイベントのシミュレーション
+            function simulateClick(element) {
+                const event = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                element.dispatchEvent(event);
+            }
+
+            // Cloudflare Turnstileのチェックボックス処理
+            console.log(`${LOG_PREFIX} Cloudflare Turnstileのコンテナを確認:`, document.querySelector('.cf-turnstile')?.outerHTML);
+            const turnstileCheckbox = await waitForTurnstileCheckbox();
+            if (turnstileCheckbox) {
+                console.log(`${LOG_PREFIX} Cloudflare Turnstileのチェックボックスを検出しました。クリックを試みます...`);
+                simulateClick(turnstileCheckbox);
+            } else {
+                console.log(`${LOG_PREFIX} Cloudflare Turnstileのチェックボックスが見つかりませんでした。非インタラクティブモードの可能性があります。`);
+                updateStatusElement("Cloudflare Turnstileのチェックボックスをクリックできませんでした。手動でチェックボックスをクリックしてください。");
+            }
+
+            // Cloudflare Turnstileのトークン処理
             const cfContainer = document.querySelector('.cf-turnstile');
             if (!cfContainer) {
-                console.warn(`${LOG_PREFIX} 未检测到Cloudflare组件，可能页面结构变化。`);
+                console.warn(`${LOG_PREFIX} 未検到Cloudflare组件，可能页面结构变化。`);
                 submitForm();
                 return;
             }
@@ -387,14 +417,14 @@ function t(text) {
             console.log(`${LOG_PREFIX} Cloudflare 令牌不存在，设置监听器等待生成...`);
             updateStatusElement("等待人机验证令牌生成...");
 
-            // 设置超时机制防止无限等待
+            // タイムアウト設定
             const timeoutId = setTimeout(() => {
                 console.error(`${LOG_PREFIX} Cloudflare Turnstile令牌生成超时，强制提交表单。`);
                 updateStatusElement("人机验证响应超时，强制提交...");
                 submitForm();
             }, 15000);
 
-            // 监听cf-turnstile-response字段的value属性变化
+            // cf-turnstile-responseの監視
             const observer = new MutationObserver((mutationsList) => {
                 for (const mutation of mutationsList) {
                     if (
@@ -418,7 +448,7 @@ function t(text) {
             updateStatusElement("验证码处理异常，请刷新页面重试。");
         }
 
-        // 提交表单逻辑
+        // フォーム送信ロジック
         function submitForm() {
             updateStatusElement("所有验证已完成，准备提交...");
             setTimeout(() => {
@@ -440,10 +470,10 @@ function t(text) {
     }
 
     /**
-     * 主流程分发
+     * 主流程分發
      */
     function main() {
-        if (isRunning) return; // 防止多重运行
+        if (isRunning) return; // 防止多重運行
         isRunning = true;
 
         const path = window.location.pathname;
@@ -465,7 +495,7 @@ function t(text) {
         }
     }
 
-    // 入口调用
+    // 入口調用
     main();
 
 })();
